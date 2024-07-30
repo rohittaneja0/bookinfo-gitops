@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: java-test-dev
+  namespace: openshift-gitops
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/contract-first-idp/java-test
+    targetRevision: HEAD
+    path: .helm
+    helm:
+      values: | 
+        image: 
+          repository: image-registry.openshift-image-registry.svc:5000/bookinfo-dev/java-test
+          tag: latest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: bookinfo-dev
+  syncPolicy:
+    automated: 
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=false
+    - RespectIgnoreDifferences=true
+    - ApplyOutOfSyncOnly=true
+    retry:
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 10m
